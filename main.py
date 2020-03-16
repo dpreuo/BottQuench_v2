@@ -29,7 +29,7 @@ bott_values = np.zeros((Nt, Lx))
 
 t0 = time.time()
 for i in range(Nt):
-    bott_values[i, :] = fn.find_bott_index_at_time(u_values_i, u_values_f, ks, t_values[i], edges_tf=True)
+    bott_values[i, :] = fn.find_bott_index_at_time_old_method(u_values_i, u_values_f, ks, t_values[i], edges_tf=True)
     ti = time.time()
     t_left = (ti - t0) * (Nt / (i + 1) - 1)
 

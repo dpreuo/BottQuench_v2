@@ -13,7 +13,7 @@ def number_to_index(i, L):
     return (i % 2, (i // 2) % L, i // (2 * L) % L)
 
 
-def find_bott_index(u_values, k_values, edges = False):
+def find_bott_index_old_method(u_values, k_values, edges = False):
     Lx = u_values.size
     Ly = k_values.size
 
@@ -68,7 +68,69 @@ def find_bott_index(u_values, k_values, edges = False):
 
     return(bott_index)
 
-def find_bott_index_at_time(u_values_initial, u_values_final, k_values,t, edges_tf = False):
+def find_bott_index_new_method(u_values, k_values, edges = False, cutoff = 0.5):
+    Lx = u_values.size
+    Ly = k_values.size
+
+    edg = edges
+
+    xs_arr = np.arange(Lx)
+
+    eiX = np.diag(np.exp((np.kron(xs_arr, [1, 1])) * 1j * 2 * np.pi / Lx))
+    eiX_minus = np.diag(np.exp((np.kron(- xs_arr, [1, 1])) * 1j * 2 * np.pi / Lx))
+
+
+    # create the hamiltonian on the other side of the array
+    H_last = cHam.create_hamiltonian(u_values, k_values[-1], edges = edg)
+    P_last = H_last * 0
+
+    eigs_last, vecs_last = la.eigh(H_last)
+    for j in range(Lx*2):
+        P_last += np.outer(vecs_last[:, j], np.conj(vecs_last[:, j])) if eigs_last[j] <= 0 else 0
+
+    matrix_out = np.zeros((Lx * 2, Lx * 2), dtype='complex')
+
+    for i in range(Ly):
+        print(i+1, ' of ', Ly)
+        H_current = cHam.create_hamiltonian(u_values, k_values[i],edges = edg)
+        P_current = H_current * 0
+
+        eigs_current, vecs_current = la.eigh(H_current)
+        for j in range(Lx * 2):
+            P_current += np.outer(vecs_current[:, j], np.conj(vecs_current[:, j])) if eigs_current[j] <= 0 else 0
+
+        UVUV = np.linalg.multi_dot([P_current, P_last, eiX, P_last, P_current, eiX_minus, P_current])
+
+        M = UVUV + (np.eye(2*Lx)) - P_current
+
+        T, Q = la.schur(M)
+
+
+
+        cancel_matrix = np.ones((2*Lx,2*Lx))
+        for j in range(2*Lx):
+            if (1 - T[i,i]).__abs__() >= 1 or T[i,i].__abs__() <= cutoff:
+                cancel_matrix[i, :] = 0
+                cancel_matrix[:, i] = 0
+
+        T_fixed = T * cancel_matrix + np.eye(2*Lx) * (1 - cancel_matrix)
+
+        D = T_fixed * np.eye(2 * Lx)
+        N = T_fixed - D
+
+        plt.pcolor(D)
+
+        matrix_out += -np.linalg.multi_dot([Q, np.diag(np.log(np.diag(D))) ,Q.conj().T]) + np.dot(N , np.diag(1/(np.diag(D))))
+
+        # matrix_out += -la.logm(UVUV + Q)
+        # P_last = P_current
+
+    bout = np.diag(matrix_out)
+    bott_index = -Lx * np.imag(bout[::2] + bout[1::2]) / (2 * np.pi)
+
+    return(bott_index)
+
+def find_bott_index_at_time_old_method(u_values_initial, u_values_final, k_values, t, edges_tf = False):
     Lx = u_values_initial.size
     Ly = k_values.size
 

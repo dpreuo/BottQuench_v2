@@ -13,7 +13,7 @@ from matplotlib import cm
 
 sbn.set()
 
-L = 40
+L = 20
 u_in  = 1.7
 u_out = 2.4
 cutoff = 0.5
@@ -68,19 +68,18 @@ U, s_vals ,V = la.svd(M)
 eigs = np.diag(T)
 nubers = np.arange(N_total)
 
-plt.subplot(1,2,1)
-thetas = np.linspace(0, 2 * np.pi, 1000)
-x_circ = np.cos(thetas)
-y_circ = np.sin(thetas)
-plt.scatter((eigs).real, (eigs).imag)
-plt.plot(x_circ+1, y_circ)
-plt.plot(x_circ * cutoff, y_circ * cutoff)
-
-plt.subplot(1,2,2)
-plt.plot(eigs.__abs__())
-plt.plot(s_vals[::-1])
-plt.show()
-
+# plt.subplot(1,2,1)
+# thetas = np.linspace(0, 2 * np.pi, 1000)
+# x_circ = np.cos(thetas)
+# y_circ = np.sin(thetas)
+# plt.scatter((eigs).real, (eigs).imag)
+# plt.plot(x_circ+1, y_circ)
+# plt.plot(x_circ * cutoff, y_circ * cutoff)
+#
+# plt.subplot(1,2,2)
+# plt.plot(eigs.__abs__())
+# plt.plot(s_vals[::-1])
+# plt.draw()
 
 cancel_matrix = np.ones((N_total,N_total))
 for i in range(N_total):
@@ -88,8 +87,6 @@ for i in range(N_total):
         cancel_matrix[i,:] = 0
         cancel_matrix[:,i] = 0
         print(i)
-
-
 
 T_fixed = T*cancel_matrix + np.eye(N_total)*(1-cancel_matrix)
 
